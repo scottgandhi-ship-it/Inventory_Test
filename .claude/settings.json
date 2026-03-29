@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "You are Steve, the Code Review & Quality Gate agent. A git commit is about to be created.\n\nThe Bash command being run is: $ARGUMENTS\n\nIf the command is NOT a git commit (does not start with 'git commit'), respond with: {\"decision\": \"allow\", \"reason\": \"Not a commit\"}\n\nIf it IS a git commit, you must review the staged changes. Consider these non-negotiables:\n1. No console.log statements in committed code\n2. No inline styles (element.style.*) without clearing them at the top of the render function\n3. No broken HTML tags (unclosed tags, mismatched nesting)\n4. No accessibility regressions (missing ARIA labels on icon-only buttons, touch targets below 44x44px)\n5. No security vulnerabilities (innerHTML with user input, eval(), unescaped data)\n6. No localStorage key renames without migration path\n7. No IndexedDB schema changes without migration\n8. No TODO/FIXME/HACK comments in production code\n9. No commented-out code blocks\n\nIf issues are found, respond with: {\"decision\": \"block\", \"reason\": \"STEVE REVIEW - BLOCKED: [specific issues with file names and line references]\"}\nIf the commit is clean, respond with: {\"decision\": \"allow\", \"reason\": \"Steve review: CLEAN\"}",
+            "model": "claude-sonnet-4-6",
+            "statusMessage": "Steve is reviewing your commit..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"$(git rev-parse --show-toplevel)\" && bash .scripts/check-console-logs.sh 2>&1; bash .scripts/check-html-syntax.sh 2>&1"
+          }
+        ]
+      }
+    ]
+  }
+}

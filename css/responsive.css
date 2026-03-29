@@ -1,0 +1,23 @@
+/* Responsive Breakpoints */
+
+/* Tablet */
+@media (max-width: 768px) {
+  main {
+    padding: var(--space-md);
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .app-header {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .app-title {
+    font-size: var(--font-size-lg);
+  }
+
+  main {
+    padding: var(--space-sm);
+  }
+}

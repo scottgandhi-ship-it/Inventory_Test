@@ -1,0 +1,23 @@
+# Claude Code
+.claude/settings.local.json
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+build/
+www/
+DerivedData/
+
+# iOS
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+Pods/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Secrets
+.keys/
+.env

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#2196F3">
+  <meta name="description" content="Inventory management application">
+  <title>Inventory Test</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header" role="banner">
+    <h1 class="app-title">Inventory Test</h1>
+  </header>
+
+  <!-- Main Content -->
+  <main id="mainContent" role="main">
+    <section class="inventory-view" aria-label="Inventory items">
+      <p class="empty-state">No items yet. Add your first item to get started.</p>
+    </section>
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/state.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
+
+</body>
+</html>
