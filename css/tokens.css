@@ -14,6 +14,15 @@
   --color-surface: #FFFFFF;
   --color-border: #E0E0E0;
 
+  /* Stock Level Colors */
+  --color-stock-ok: #4CAF50;
+  --color-stock-low: #FF9800;
+  --color-stock-critical: #F44336;
+
+  /* Navigation */
+  --color-nav-bg: #FFFFFF;
+  --nav-height: 64px;
+
   /* Spacing */
   --space-xs: 4px;
   --space-sm: 8px;

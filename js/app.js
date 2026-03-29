@@ -1,27 +1,112 @@
-/* Main Application Logic */
-(function () {
+/* Main Application Logic - Router, Navigation, Init */
+const App = (function () {
   'use strict';
+
+  var _toastTimer = null;
 
   function init() {
     AppState.items = Storage.load(Storage.KEYS.ITEMS, []);
-    AppState.categories = Storage.load(Storage.KEYS.CATEGORIES, []);
-    render();
+    AppState.transactions = Storage.load(Storage.KEYS.TRANSACTIONS, []);
+    AppState.settings = Storage.load(Storage.KEYS.SETTINGS, { defaultThreshold: 50 });
+
+    _wireNav();
+    navigate(AppState.currentView);
   }
 
-  function render() {
-    const container = document.querySelector('.inventory-view');
-    if (!container) return;
+  function navigate(viewName, params) {
+    _beforeViewChange();
 
-    container.innerHTML = '';
+    AppState.currentView = viewName;
+    _updateNavActive(viewName);
 
-    if (AppState.items.length === 0) {
-      const empty = document.createElement('p');
-      empty.className = 'empty-state';
-      empty.textContent = 'No items yet. Add your first item to get started.';
-      container.appendChild(empty);
-      return;
+    switch (viewName) {
+      case 'dashboard':
+        Views.renderDashboard();
+        break;
+      case 'manage':
+        Views.renderManageView();
+        break;
+      case 'add-part':
+        Views.renderAddPart(AppState.activePart || (params && params.part) || null);
+        break;
+      case 'scan':
+        Views.renderScanView();
+        break;
+      case 'import':
+        Views.renderImportView();
+        break;
+      case 'part-detail':
+        if (AppState.activePart) {
+          Views.renderPartDetail(AppState.activePart);
+        } else {
+          Views.renderDashboard();
+        }
+        break;
+      default:
+        Views.renderDashboard();
+    }
+
+    // Move focus to main content for accessibility
+    var mainEl = document.getElementById('mainContent');
+    if (mainEl) mainEl.focus({ preventScroll: true });
+  }
+
+  function _beforeViewChange() {
+    // Cleanup hook for views that need teardown (e.g. scanner camera)
+    if (AppState.currentView === 'scan' && typeof Scanner !== 'undefined') {
+      Scanner.stop();
     }
   }
 
+  function _wireNav() {
+    var navBtns = document.querySelectorAll('.bottom-nav-btn');
+    navBtns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var view = btn.getAttribute('data-view');
+        if (view) {
+          AppState.activePart = null;
+          navigate(view);
+        }
+      });
+    });
+  }
+
+  function _updateNavActive(viewName) {
+    var navBtns = document.querySelectorAll('.bottom-nav-btn');
+    navBtns.forEach(function (btn) {
+      var view = btn.getAttribute('data-view');
+      btn.classList.toggle('bottom-nav-btn--active', view === viewName);
+      btn.setAttribute('aria-current', view === viewName ? 'page' : 'false');
+    });
+  }
+
+  function _renderPlaceholder(name, message) {
+    var container = document.getElementById('mainContent');
+    container.innerHTML = '';
+    var p = document.createElement('p');
+    p.className = 'empty-state';
+    p.textContent = message;
+    container.appendChild(p);
+  }
+
+  function toast(message, type) {
+    type = type || 'success';
+    var el = document.getElementById('toast');
+    if (!el) return;
+
+    el.textContent = message;
+    el.className = 'toast toast--visible toast--' + type;
+
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(function () {
+      el.className = 'toast';
+    }, 3000);
+  }
+
   document.addEventListener('DOMContentLoaded', init);
+
+  return {
+    navigate: navigate,
+    toast: toast
+  };
 })();

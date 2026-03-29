@@ -2,7 +2,7 @@
 const Storage = {
   KEYS: {
     ITEMS: 'inventory_items',
-    CATEGORIES: 'inventory_categories',
+    TRANSACTIONS: 'inventory_transactions',
     SETTINGS: 'inventory_settings'
   },
 

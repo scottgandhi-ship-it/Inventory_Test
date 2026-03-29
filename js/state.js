@@ -1,8 +1,10 @@
 /* Global Application State */
 const AppState = {
   items: [],
-  categories: [],
-  currentView: 'list',
+  transactions: [],
+  settings: {},
+  currentView: 'dashboard',
   searchQuery: '',
-  filterCategory: null
+  filterStatus: null,
+  activePart: null
 };

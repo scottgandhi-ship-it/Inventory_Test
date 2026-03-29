@@ -1,9 +1,20 @@
 /* Responsive Breakpoints */
 
+/* Desktop */
+@media (min-width: 769px) {
+  .parts-list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 /* Tablet */
 @media (max-width: 768px) {
   main {
     padding: var(--space-md);
+  }
+
+  .parts-list {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -19,5 +30,14 @@
 
   main {
     padding: var(--space-sm);
+  }
+
+  .parts-list {
+    grid-template-columns: 1fr;
+  }
+
+  .view-header {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
   }
 }

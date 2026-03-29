@@ -1,4 +1,4 @@
-const CACHE_NAME = 'inventory-test-v1';
+const CACHE_NAME = 'inventory-test-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -8,6 +8,11 @@ const ASSETS = [
   './css/responsive.css',
   './js/state.js',
   './js/storage.js',
+  './js/parts.js',
+  './js/import.js',
+  './js/qr.js',
+  './js/scanner.js',
+  './js/views.js',
   './js/app.js'
 ];
 

@@ -1,0 +1,26 @@
+partNumber,prefix,name,binLocation,maxQuantity,currentQuantity,reorderThreshold
+4410,BRK,Brake Pad Set - Heavy Duty,A3-07,20,18,50
+4411,BRK,Brake Rotor - Front,A3-08,12,3,50
+220,FLT,Oil Filter - Standard,B1-02,50,50,40
+221,FLT,Fuel Filter - Diesel,B1-03,40,22,50
+222,FLT,Air Filter - Primary,B1-04,30,8,50
+100,BLT,Fan Belt - Serpentine,C2-15,30,30,50
+101,BLT,Alternator Belt,C2-16,25,12,50
+305,HYD,Hydraulic Hose - 3/4in,D1-01,15,2,60
+306,HYD,Hydraulic Fitting - 90deg,D1-02,40,40,50
+307,HYD,Hydraulic Pump Seal Kit,D1-03,10,5,50
+500,ENG,Turbo Gasket Set,E2-01,8,8,50
+501,ENG,Injector Nozzle,E2-02,20,6,50
+502,ENG,Head Gasket - Cummins ISX,E2-03,6,1,50
+600,ELC,Alternator - Reman,F1-01,5,5,50
+601,ELC,Starter Motor - Reman,F1-02,5,3,50
+602,ELC,Battery Terminal Connector,F1-03,100,45,50
+700,SUS,Leaf Spring - Rear,G1-01,8,8,50
+701,SUS,Shock Absorber - Heavy Duty,G1-02,16,4,50
+702,SUS,U-Bolt Kit,G1-03,30,28,50
+800,EXH,DPF Filter - Replacement,H1-01,4,1,60
+801,EXH,EGR Valve,H1-02,6,6,50
+802,EXH,Exhaust Clamp - 5in,H1-03,50,20,50
+900,CLN,Coolant Hose - Upper,J1-01,20,14,50
+901,CLN,Thermostat - 180F,J1-02,15,15,50
+902,CLN,Water Pump - Cummins,J1-03,6,2,50
