@@ -52,8 +52,8 @@ const App = (function () {
   }
 
   function _beforeViewChange() {
-    // Cleanup hook for views that need teardown (e.g. scanner camera)
-    if (AppState.currentView === 'scan' && typeof Scanner !== 'undefined') {
+    // Always stop camera if it's running, regardless of which view we think we're on
+    if (typeof Scanner !== 'undefined') {
       Scanner.stop();
     }
   }
