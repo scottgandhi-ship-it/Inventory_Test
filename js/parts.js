@@ -93,6 +93,12 @@ const Parts = (function () {
     _logTransaction(part.id, 'decrement', -(previous - part.currentQuantity), previous, part.currentQuantity);
     _persist();
 
+    // Auto-queue reorder if at threshold
+    if (typeof Reorder !== 'undefined') {
+      Reorder.autoQueue(part);
+      Reorder.syncSnapshot(part);
+    }
+
     return {
       part: part,
       atThreshold: isAtThreshold(part)
@@ -115,6 +121,13 @@ const Parts = (function () {
 
     _logTransaction(part.id, 'restock', part.currentQuantity - previous, previous, part.currentQuantity);
     _persist();
+
+    // Auto-remove pending reorder if restocked above threshold
+    if (typeof Reorder !== 'undefined') {
+      Reorder.autoRemove(part.id);
+      Reorder.syncSnapshot(part);
+    }
+
     return part;
   }
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'inventory-test-v7';
+const CACHE_NAME = 'inventory-test-v8';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
   './js/storage.js',
   './js/parts.js',
   './js/import.js',
+  './js/reorder.js',
   './js/qr.js',
   './js/scanner.js',
   './js/views.js',

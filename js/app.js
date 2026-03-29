@@ -7,6 +7,7 @@ const App = (function () {
   function init() {
     AppState.items = Storage.load(Storage.KEYS.ITEMS, []);
     AppState.transactions = Storage.load(Storage.KEYS.TRANSACTIONS, []);
+    AppState.reorders = Storage.load(Storage.KEYS.REORDERS, []);
     AppState.settings = Storage.load(Storage.KEYS.SETTINGS, { defaultThreshold: 50 });
 
     _wireNav();
@@ -34,6 +35,9 @@ const App = (function () {
         break;
       case 'import':
         Views.renderImportView();
+        break;
+      case 'reorder':
+        Views.renderReorderQueue();
         break;
       case 'part-detail':
         if (AppState.activePart) {

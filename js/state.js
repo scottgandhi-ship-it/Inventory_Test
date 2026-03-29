@@ -2,6 +2,7 @@
 const AppState = {
   items: [],
   transactions: [],
+  reorders: [],
   settings: {},
   currentView: 'dashboard',
   searchQuery: '',

@@ -166,6 +166,17 @@ const Views = (function () {
     title.className = 'view-title';
     title.textContent = 'Inventory Dashboard';
     header.appendChild(title);
+
+    var pendingCount = Reorder.getPendingCount();
+    if (pendingCount > 0) {
+      var queueBtn = document.createElement('button');
+      queueBtn.className = 'btn-accent';
+      queueBtn.textContent = 'Reorder Queue (' + pendingCount + ')';
+      queueBtn.setAttribute('aria-label', pendingCount + ' items pending reorder');
+      queueBtn.addEventListener('click', function () { App.navigate('reorder'); });
+      header.appendChild(queueBtn);
+    }
+
     container.appendChild(header);
 
     if (AppState.items.length === 0) {
@@ -176,13 +187,14 @@ const Views = (function () {
       return;
     }
 
-    // Summary banner
+    // Summary banner - clickable to open reorder queue
     const lowCount = Parts.getAtThreshold().length;
     if (lowCount > 0) {
-      const banner = document.createElement('div');
-      banner.className = 'alert-banner';
+      const banner = document.createElement('button');
+      banner.className = 'alert-banner alert-banner--clickable';
       banner.setAttribute('role', 'alert');
-      banner.textContent = lowCount + ' part' + (lowCount > 1 ? 's' : '') + ' need reordering';
+      banner.textContent = lowCount + ' part' + (lowCount > 1 ? 's' : '') + ' need reordering — tap to view queue';
+      banner.addEventListener('click', function () { App.navigate('reorder'); });
       container.appendChild(banner);
     }
 
@@ -930,6 +942,301 @@ const Views = (function () {
     App.navigate('manage');
   }
 
+  /* ── Reorder Queue View ── */
+  var _selectedReorders = new Set();
+  var _reorderFilter = null;
+
+  function renderReorderQueue() {
+    _selectedReorders.clear();
+    const container = main();
+    container.innerHTML = '';
+
+    const header = document.createElement('div');
+    header.className = 'view-header';
+
+    const title = document.createElement('h2');
+    title.className = 'view-title';
+    title.textContent = 'Reorder Queue';
+    header.appendChild(title);
+
+    const backBtn = document.createElement('button');
+    backBtn.className = 'btn-secondary';
+    backBtn.textContent = 'Dashboard';
+    backBtn.addEventListener('click', function () { App.navigate('dashboard'); });
+    header.appendChild(backBtn);
+    container.appendChild(header);
+
+    // Batch action bar
+    var batchBar = document.createElement('div');
+    batchBar.className = 'batch-bar';
+    batchBar.id = 'batchBar';
+
+    var selectAllLabel = document.createElement('label');
+    selectAllLabel.className = 'batch-select-all';
+    var selectAllCb = document.createElement('input');
+    selectAllCb.type = 'checkbox';
+    selectAllCb.id = 'selectAllReorders';
+    selectAllCb.setAttribute('aria-label', 'Select all reorder items');
+    selectAllCb.addEventListener('change', function () {
+      _toggleSelectAll(selectAllCb.checked, listContainer);
+    });
+    selectAllLabel.appendChild(selectAllCb);
+    selectAllLabel.appendChild(document.createTextNode(' Select All'));
+    batchBar.appendChild(selectAllLabel);
+
+    var batchBtns = document.createElement('div');
+    batchBtns.className = 'batch-btns';
+
+    var emailBtn = document.createElement('button');
+    emailBtn.className = 'btn-primary btn-small';
+    emailBtn.textContent = 'Send Email';
+    emailBtn.addEventListener('click', function () {
+      var ids = Array.from(_selectedReorders);
+      if (ids.length === 0) { App.toast('Select items first.', 'error'); return; }
+      var mailto = Reorder.generateEmail(ids);
+      window.location.href = mailto;
+    });
+    batchBtns.appendChild(emailBtn);
+
+    var csvBtn = document.createElement('button');
+    csvBtn.className = 'btn-secondary btn-small';
+    csvBtn.textContent = 'Export CSV';
+    csvBtn.addEventListener('click', function () {
+      var ids = Array.from(_selectedReorders);
+      if (ids.length === 0) { App.toast('Select items first.', 'error'); return; }
+      Reorder.downloadCSV(ids);
+      App.toast('CSV downloaded.');
+    });
+    batchBtns.appendChild(csvBtn);
+
+    var markOrderedBtn = document.createElement('button');
+    markOrderedBtn.className = 'btn-accent btn-small';
+    markOrderedBtn.textContent = 'Mark Ordered';
+    markOrderedBtn.addEventListener('click', function () {
+      var ids = Array.from(_selectedReorders);
+      if (ids.length === 0) { App.toast('Select items first.', 'error'); return; }
+      ids.forEach(function (id) { Reorder.updateStatus(id, 'ordered'); });
+      App.toast(ids.length + ' item(s) marked as ordered.');
+      renderReorderQueue();
+    });
+    batchBtns.appendChild(markOrderedBtn);
+
+    batchBar.appendChild(batchBtns);
+    container.appendChild(batchBar);
+
+    // Filter tabs
+    var filterWrap = document.createElement('div');
+    filterWrap.className = 'filter-wrap';
+
+    [{ value: null, label: 'All' }, { value: 'pending', label: 'Pending' }, { value: 'ordered', label: 'Ordered' }, { value: 'received', label: 'Received' }].forEach(function (f) {
+      var btn = document.createElement('button');
+      btn.className = 'filter-btn' + (_reorderFilter === f.value ? ' filter-btn--active' : '');
+      btn.textContent = f.label;
+
+      var count = f.value ? Reorder.getByStatus(f.value).length : AppState.reorders.length;
+      if (count > 0) btn.textContent += ' (' + count + ')';
+
+      btn.setAttribute('aria-pressed', _reorderFilter === f.value ? 'true' : 'false');
+      btn.addEventListener('click', function () {
+        _reorderFilter = f.value;
+        renderReorderQueue();
+      });
+      filterWrap.appendChild(btn);
+    });
+    container.appendChild(filterWrap);
+
+    // Queue list
+    var listContainer = document.createElement('div');
+    listContainer.className = 'reorder-list';
+
+    var items = Reorder.getByStatus(_reorderFilter);
+    if (items.length === 0) {
+      var empty = document.createElement('p');
+      empty.className = 'empty-state';
+      empty.textContent = _reorderFilter ? 'No ' + _reorderFilter + ' reorders.' : 'Reorder queue is empty.';
+      listContainer.appendChild(empty);
+    } else {
+      items.forEach(function (reorder) {
+        listContainer.appendChild(_createReorderCard(reorder));
+      });
+    }
+
+    container.appendChild(listContainer);
+  }
+
+  function _createReorderCard(reorder) {
+    var card = document.createElement('div');
+    card.className = 'reorder-card reorder-card--' + reorder.status;
+
+    // Top row: checkbox + part info + status badge
+    var topRow = document.createElement('div');
+    topRow.className = 'reorder-card-top';
+
+    if (reorder.status !== 'received') {
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.className = 'reorder-cb';
+      cb.setAttribute('aria-label', 'Select ' + reorder.partName);
+      cb.checked = _selectedReorders.has(reorder.id);
+      cb.addEventListener('change', function () {
+        if (cb.checked) { _selectedReorders.add(reorder.id); } else { _selectedReorders.delete(reorder.id); }
+      });
+      topRow.appendChild(cb);
+    }
+
+    var info = document.createElement('div');
+    info.className = 'reorder-card-info';
+    info.innerHTML = '<strong>' + _escapeHtml(reorder.partName) + '</strong>' +
+      '<span class="part-card-number">' + _escapeHtml(reorder.partNumber) + '</span>' +
+      '<span class="part-card-bin">Bin: ' + _escapeHtml(reorder.binLocation) + '</span>';
+    topRow.appendChild(info);
+
+    var badge = document.createElement('span');
+    badge.className = 'status-badge status-badge--' + reorder.status;
+    badge.textContent = reorder.status.charAt(0).toUpperCase() + reorder.status.slice(1);
+    topRow.appendChild(badge);
+
+    card.appendChild(topRow);
+
+    // Quantity row
+    var qtyRow = document.createElement('div');
+    qtyRow.className = 'reorder-qty-row';
+
+    var stockText = document.createElement('span');
+    stockText.className = 'reorder-stock';
+    stockText.textContent = 'Stock: ' + reorder.currentQuantity + ' / ' + reorder.maxQuantity;
+    qtyRow.appendChild(stockText);
+
+    if (reorder.status === 'pending') {
+      var qtyLabel = document.createElement('label');
+      qtyLabel.setAttribute('for', 'qty_' + reorder.id);
+      qtyLabel.textContent = 'Order:';
+      qtyLabel.className = 'reorder-qty-label';
+      qtyRow.appendChild(qtyLabel);
+
+      var qtyInput = document.createElement('input');
+      qtyInput.type = 'number';
+      qtyInput.id = 'qty_' + reorder.id;
+      qtyInput.className = 'reorder-qty-input';
+      qtyInput.min = 1;
+      qtyInput.value = reorder.quantityToOrder;
+      qtyInput.addEventListener('change', function () {
+        var val = parseInt(qtyInput.value, 10);
+        if (val > 0) Reorder.updateQuantity(reorder.id, val);
+      });
+      qtyRow.appendChild(qtyInput);
+    } else {
+      var qtyText = document.createElement('span');
+      qtyText.textContent = 'Ordered: ' + reorder.quantityToOrder;
+      qtyRow.appendChild(qtyText);
+    }
+
+    card.appendChild(qtyRow);
+
+    // Notes
+    if (reorder.status === 'pending') {
+      var notesRow = document.createElement('div');
+      notesRow.className = 'reorder-notes-row';
+
+      var notesLabel = document.createElement('label');
+      notesLabel.setAttribute('for', 'notes_' + reorder.id);
+      notesLabel.textContent = 'Notes';
+      notesLabel.className = 'sr-only';
+      notesRow.appendChild(notesLabel);
+
+      var notesInput = document.createElement('input');
+      notesInput.type = 'text';
+      notesInput.id = 'notes_' + reorder.id;
+      notesInput.className = 'reorder-notes-input';
+      notesInput.value = reorder.notes;
+      notesInput.setAttribute('aria-label', 'Notes for ' + reorder.partName);
+      notesInput.addEventListener('change', function () {
+        Reorder.updateNotes(reorder.id, notesInput.value.trim());
+      });
+      notesRow.appendChild(notesInput);
+      card.appendChild(notesRow);
+    } else if (reorder.notes) {
+      var noteDisplay = document.createElement('div');
+      noteDisplay.className = 'reorder-notes-display';
+      noteDisplay.textContent = reorder.notes;
+      card.appendChild(noteDisplay);
+    }
+
+    // Timestamps
+    if (reorder.orderedAt) {
+      var orderedDate = document.createElement('div');
+      orderedDate.className = 'reorder-timestamp';
+      orderedDate.textContent = 'Ordered: ' + new Date(reorder.orderedAt).toLocaleDateString();
+      card.appendChild(orderedDate);
+    }
+    if (reorder.receivedAt) {
+      var receivedDate = document.createElement('div');
+      receivedDate.className = 'reorder-timestamp';
+      receivedDate.textContent = 'Received: ' + new Date(reorder.receivedAt).toLocaleDateString();
+      card.appendChild(receivedDate);
+    }
+
+    // Actions
+    var actions = document.createElement('div');
+    actions.className = 'reorder-card-actions';
+
+    if (reorder.status === 'pending') {
+      var orderBtn = document.createElement('button');
+      orderBtn.className = 'btn-small btn-accent';
+      orderBtn.textContent = 'Mark Ordered';
+      orderBtn.addEventListener('click', function () {
+        Reorder.updateStatus(reorder.id, 'ordered');
+        App.toast('"' + reorder.partName + '" marked as ordered.');
+        renderReorderQueue();
+      });
+      actions.appendChild(orderBtn);
+
+      var dismissBtn = document.createElement('button');
+      dismissBtn.className = 'btn-small btn-danger';
+      dismissBtn.textContent = 'Dismiss';
+      dismissBtn.addEventListener('click', function () {
+        if (confirm('Remove "' + reorder.partName + '" from reorder queue?')) {
+          Reorder.remove(reorder.id);
+          App.toast('Removed from queue.');
+          renderReorderQueue();
+        }
+      });
+      actions.appendChild(dismissBtn);
+    } else if (reorder.status === 'ordered') {
+      var receiveBtn = document.createElement('button');
+      receiveBtn.className = 'btn-small btn-primary';
+      receiveBtn.textContent = 'Mark Received';
+      receiveBtn.addEventListener('click', function () {
+        Reorder.updateStatus(reorder.id, 'received');
+        App.toast('"' + reorder.partName + '" marked as received.');
+
+        // Prompt to restock
+        var part = Parts.getById(reorder.partId);
+        if (part && confirm('Restock "' + reorder.partName + '" now?')) {
+          AppState.activePart = part;
+          App.navigate('part-detail');
+        } else {
+          renderReorderQueue();
+        }
+      });
+      actions.appendChild(receiveBtn);
+    }
+
+    card.appendChild(actions);
+    return card;
+  }
+
+  function _toggleSelectAll(checked, listContainer) {
+    var checkboxes = listContainer.querySelectorAll('.reorder-cb');
+    var items = Reorder.getByStatus(_reorderFilter);
+    checkboxes.forEach(function (cb, i) {
+      cb.checked = checked;
+      if (items[i]) {
+        if (checked) { _selectedReorders.add(items[i].id); } else { _selectedReorders.delete(items[i].id); }
+      }
+    });
+  }
+
   function _escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
@@ -942,6 +1249,7 @@ const Views = (function () {
     renderDashboard: renderDashboard,
     renderScanView: renderScanView,
     renderPartDetail: renderPartDetail,
-    renderImportView: renderImportView
+    renderImportView: renderImportView,
+    renderReorderQueue: renderReorderQueue
   };
 })();

@@ -3,6 +3,7 @@ const Storage = {
   KEYS: {
     ITEMS: 'inventory_items',
     TRANSACTIONS: 'inventory_transactions',
+    REORDERS: 'inventory_reorders',
     SETTINGS: 'inventory_settings'
   },
 
