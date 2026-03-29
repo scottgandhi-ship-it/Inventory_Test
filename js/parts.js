@@ -54,8 +54,31 @@ const Parts = (function () {
     return AppState.items.find(p => p.id === id) || null;
   }
 
-  function getByPartNumber(partNumber) {
-    return AppState.items.find(p => p.partNumber === partNumber) || null;
+  function getByPartNumber(query) {
+    if (!query) return null;
+    var q = query.trim();
+
+    // Exact match first
+    var exact = AppState.items.find(function (p) { return p.partNumber === q; });
+    if (exact) return exact;
+
+    // Case-insensitive match
+    var lower = q.toLowerCase();
+    var ci = AppState.items.find(function (p) { return p.partNumber.toLowerCase() === lower; });
+    if (ci) return ci;
+
+    // Match without prefix (e.g. "4410" matches "BRK-4410")
+    var suffixMatch = AppState.items.find(function (p) {
+      return p.partNumber.toLowerCase().endsWith('-' + lower);
+    });
+    if (suffixMatch) return suffixMatch;
+
+    // Match just the number portion after the dash
+    var numberOnly = AppState.items.find(function (p) {
+      var parts = p.partNumber.split('-');
+      return parts.length > 1 && parts.slice(1).join('-').toLowerCase() === lower;
+    });
+    return numberOnly || null;
   }
 
   function decrement(id, amount) {
